@@ -140,7 +140,7 @@ SELECT
     de.seqn,
     de.age_years, de.age_group, de.sex, de.race_eth, de.educ_level, de.pir,
     cf.early_onset_cancer,
-    dp.dpq_total,
+    dp.dpq_total,dp.dpq_cat,
     ss.smoke_status,
     hc.hscrp_mg_l_raw, hc.hscrp_cat
 FROM demo_clean de
