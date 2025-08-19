@@ -1,0 +1,13 @@
+"column_name","description","source_table","source_variable","data_type"
+"age_group","Age category derived from RIDAGEYR (18–29, 30–39, 40–49, 50–59, 60+).","demo_clean","Derived from RIDAGEYR",NULL
+"age_years","Age in years at screening (continuous).","demo_clean","RIDAGEYR",NULL
+"dpq_total","PHQ-9 total score (sum of DPQ010–DPQ090; 0–27; missing/invalid codes set to NULL).","dpq_stress","Derived from DPQ010–DPQ090",NULL
+"early_onset_cancer","Outcome indicator: 1=early-onset (<50 at diagnosis proxy), 0=not early-onset; defined only for ever-cancer cases.","cancer_flags","early_onset_cancer",NULL
+"educ_level","Education level for adults (DMDEDUC2 coding).","demo_clean","DMDEDUC2",NULL
+"hscrp_cat","hsCRP category based on concentration: low(<1), average(1–3), high(>3).","hscrp_clean","Derived from LBXHSCRP (or LOD-imputed variant)",NULL
+"hscrp_mg_l_raw","hsCRP concentration in mg/L (raw LBXHSCRP; not LOD-imputed).","hscrp_clean","LBXHSCRP (as hscrp_mg_l_raw)",NULL
+"pir","Income-to-poverty ratio (INDFMPIR).","demo_clean","INDFMPIR",NULL
+"race_eth","Race/Hispanic origin (RIDRETH3 coding).","demo_clean","RIDRETH3",NULL
+"seqn","Respondent sequence number (unique participant ID).","demo_clean","SEQN",NULL
+"sex","Sex at interview (1=Male, 2=Female).","demo_clean","RIAGENDR",NULL
+"smoke_status","Smoking status: never / former / current (derived from SMQ020, SMQ040).","smoking_status","Derived from SMQ020, SMQ040",NULL
