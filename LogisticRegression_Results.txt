@@ -1,0 +1,31 @@
+"c:/STS/My Project/data/Analysis/Modeling/LogisticRegression.py"
+Optimization terminated successfully.
+         Current function value: 0.219787
+         Iterations 8
+                           Logit Regression Results
+==============================================================================
+Dep. Variable:     early_onset_cancer   No. Observations:                  794
+Model:                          Logit   Df Residuals:                      789
+Method:                           MLE   Df Model:                            4
+Date:                Wed, 20 Aug 2025   Pseudo R-squ.:                 0.06501
+Time:                        12:27:11   Log-Likelihood:                -174.51
+converged:                       True   LL-Null:                       -186.64
+Covariance Type:            nonrobust   LLR p-value:                 7.062e-05
+=============================================================================================
+                                coef    std err          z      P>|z|      [0.025      0.975]
+---------------------------------------------------------------------------------------------
+Intercept                    -2.4488      0.386     -6.337      0.000      -3.206      -1.691
+C(smoke_status)[T.former]    -1.5368      0.483     -3.179      0.001      -2.484      -0.589
+C(smoke_status)[T.never]     -0.4400      0.381     -1.156      0.248      -1.186       0.306
+C(hscrp_cat)[T.low]           0.7820      0.447      1.751      0.080      -0.093       1.657
+dpq_total                     0.0728      0.027      2.659      0.008       0.019       0.127
+=============================================================================================
+
+Odds Ratios with 95% CI:
+                                                term     OR  CI_lower  CI_upper
+Intercept                                  Intercept  0.086     0.041     0.184
+C(smoke_status)[T.former]  C(smoke_status)[T.former]  0.215     0.083     0.555
+C(smoke_status)[T.never]    C(smoke_status)[T.never]  0.644     0.305     1.358
+C(hscrp_cat)[T.low]              C(hscrp_cat)[T.low]  2.186     0.911     5.245
+dpq_total                                  dpq_total  1.076     1.019     1.135
+PS C:\Users\gauri>
