@@ -1,4 +1,0 @@
-Model: A_continuous
-Formula: early_onset_cancer ~ dpq_total_std + log_hscrp_std + age_years_std + C(sex) + C(educ_level) + C(smoke_status)
-Rows used: 794
-Regularized (ridge) alpha=1.0

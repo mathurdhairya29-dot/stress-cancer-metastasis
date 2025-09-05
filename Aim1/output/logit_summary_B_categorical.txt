@@ -1,4 +1,0 @@
-Model: B_categorical
-Formula: early_onset_cancer ~ C(dpq_cat) + C(hscrp_cat) + age_years_std + C(sex) + C(educ_level) + C(smoke_status)
-Rows used: 794
-Regularized (ridge) alpha=1.0
