@@ -1,0 +1,28 @@
+"table_name","variable","label","source_file","data_type","notes"
+"cancer_flags","ever_cancer","Cancer vs non-cancer (recoded from mcq220)","derived","integer","1=cancer, 0=non-cancer"
+"demo_clean","age_group","Age group bucket","derived","text","Derived"
+"demo_clean","age_years","Age in years at screening (RIDAGEYR)","DEMO_L.XPT","numeric",NULL
+"demo_clean","educ_level","Education level (NHANES categories)","DEMO_L.XPT","integer",NULL
+"demo_clean","pir","Poverty Income Ratio","DEMO_L.XPT","numeric",NULL
+"demo_clean","race_eth","Race / Ethnicity (NHANES categories)","DEMO_L.XPT","integer",NULL
+"demo_clean","seqn","Participant ID","DEMO_L.XPT","integer","Key"
+"demo_clean","sex","Sex","DEMO_L.XPT","integer","NHANES codes 1/2"
+"dpq_data","dpq010","PHQ item 1","DPQ_L.XPT","integer","0=Not at all,1=Several days,2=More than half,3=Nearly every"
+"dpq_data","dpq020","PHQ item 2","DPQ_L.XPT","integer",NULL
+"dpq_data","dpq030","PHQ item 3","DPQ_L.XPT","integer",NULL
+"dpq_data","dpq040","PHQ item 4","DPQ_L.XPT","integer",NULL
+"dpq_data","dpq050","PHQ item 5","DPQ_L.XPT","integer",NULL
+"dpq_data","dpq060","PHQ item 6","DPQ_L.XPT","integer",NULL
+"dpq_data","dpq070","PHQ item 7","DPQ_L.XPT","integer",NULL
+"dpq_data","dpq080","PHQ item 8","DPQ_L.XPT","integer",NULL
+"dpq_data","dpq090","PHQ item 9","DPQ_L.XPT","integer",NULL
+"dpq_stress","dpq_cat","Depression category","derived","text","none-minimal, mild, moderate, mod-severe, severe"
+"dpq_stress","dpq_total","PHQ-9 total score (0–27)","derived","numeric","Sum of DPQ items 010–090 with 7/9 treated as NULL"
+"hscrp_clean","hscrp_cat","hsCRP category (low/average/high)","derived","text","cutpoints: <1 low, 1–<3 average, ≥3 high"
+"hscrp_clean","hscrp_mg_l_raw","hsCRP (mg/L), cleaned","derived","numeric","copied from lbxhscrp"
+"hscrp_data","lbdhscrp","Lower detection limit (mg/L)","HSCRP_L.XPT","numeric",NULL
+"hscrp_data","lbxhscrp","hsCRP concentration (mg/L)","HSCRP_L.XPT","numeric",NULL
+"mcq_data_filtered","mcq220","Ever told you had cancer or malignancy","MCQ_L.XPT","integer","1=Yes, 2=No"
+"smoking_status","smoke_status","Smoking status (current/former/never)","derived","text",NULL
+"smq_data","smq020","Smoked at least 100 cigarettes in life (ever smoked)","SMQ_L.XPT","integer","1=Yes,2=No"
+"smq_data","smq040","Do you now smoke cigarettes?","SMQ_L.XPT","integer","1=Every day, 2=Some days, 3=Not at all"

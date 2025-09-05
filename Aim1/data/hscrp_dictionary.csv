@@ -1,0 +1,5 @@
+"id","variable","definition","source_file","file_description"
+1,"SEQN","Respondent sequence number (unique identifier for each participant)","HSCRP_L","High-sensitivity C-reactive protein data from NHANES 2021–2022"
+2,"LBXHSCRP","hsCRP concentration in mg/L","HSCRP_L","High-sensitivity C-reactive protein data from NHANES 2021–2022"
+3,"LBDHSCRP","hsCRP concentration lower detection limit in mg/L","HSCRP_L","High-sensitivity C-reactive protein data from NHANES 2021–2022"
+4,"LBDHSDLC","Comment code for hsCRP result (e.g., below detection limit)","HSCRP_L","High-sensitivity C-reactive protein data from NHANES 2021–2022"
