@@ -6,14 +6,20 @@ import statsmodels.formula.api as smf
 from sqlalchemy import create_engine
 from sklearn.metrics import roc_curve, roc_auc_score
 
+script_dir = Path(__file__).resolve().parent  
+
 
 # I was having some difficulty in laptop so worked directly on csv file without installing postgres
 myDataSource   = "csv"   # "csv" or "sql"
-baseTablePath   = Path("C:/STS/My Project/StressMetastasis/Aim1/data/analysis_base.csv")
+
+baseTablePath = script_dir.parent/"data"/"analysis_base.csv"
+# baseTablePath   = Path("C:/STS/My Project/StressMetastasis/Aim1/data/analysis_base.csv")
+
 myConnectionSQL= "postgresql+psycopg2://postgres:admin@localhost:5432/postgres"
 baseTable      = "analysis_base"
 
-outputDirectory= Path("C:/STS/My Project/StressMetastasis/Aim1/output")
+outputDirectory = script_dir.parent/"output"
+# outputDirectory= Path("C:/STS/My Project/StressMetastasis/Aim1/output")
 outputDirectory.mkdir(parents=True, exist_ok=True)
 
 print(f"saving outputs to: {outputDirectory}")
@@ -30,7 +36,7 @@ else:
 
 print(f"Number of records in dataset: {len(myDataFrame)}")
 
-print(myDataFrame);
+print(myDataFrame.head())
 
 if "ever_cancer" in myDataFrame.columns:
     outcome_col = "ever_cancer"
