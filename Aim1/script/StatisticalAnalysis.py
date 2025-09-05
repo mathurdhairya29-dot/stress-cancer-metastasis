@@ -8,11 +8,12 @@ from sklearn.metrics import roc_curve, roc_auc_score
 
 
 # I was having some difficulty in laptop so worked directly on csv file without installing postgres
-myDataSource = "csv"   # change to "sql" to read from PostgreSQL
+myDataSource   = "csv"   # "csv" or "sql"
 baseTablePath   = Path("C:/STS/My Project/StressMetastasis/Aim1/data/analysis_base.csv")
-myConnectionSQL = "postgresql+psycopg2://postgres:admin@localhost:5432/postgres"
-baseTable       = "analysis_base"
-outputDirectory = Path("C:/STS/My Project/StressMetastasis/Aim1/output")
+myConnectionSQL= "postgresql+psycopg2://postgres:admin@localhost:5432/postgres"
+baseTable      = "analysis_base"
+
+outputDirectory= Path("C:/STS/My Project/StressMetastasis/Aim1/output")
 outputDirectory.mkdir(parents=True, exist_ok=True)
 
 print(f"saving outputs to: {outputDirectory}")
@@ -25,172 +26,106 @@ elif myDataSource == "sql":
     engine = create_engine(myConnectionSQL)
     myDataFrame = pd.read_sql(f"SELECT * FROM {baseTable}", engine)
 else:
-    raise ValueError("myDataSource should be 'csv' or 'sql'")
+    raise ValueError("myDataSource must be 'csv' or 'sql'")
 
-print(f"Number of records in dataset from table or csv: {len(myDataFrame)}")
+print(f"Number of records in dataset: {len(myDataFrame)}")
 
-if "early_onset_cancer" not in myDataFrame.columns:
-    raise ValueError("missing 'early_onset_cancer' column")
+print(myDataFrame);
 
-# Count of data
-# Here, i am trying to print how many had early-onset cancer vs not
+if "ever_cancer" in myDataFrame.columns:
+    outcome_col = "ever_cancer"
+    # ensure 0/1
+    myDataFrame[outcome_col] = pd.to_numeric(myDataFrame[outcome_col], errors="coerce").astype("Int64")
+elif "mcq220" in myDataFrame.columns:
+    outcome_col = "mcq220"
+    # mcq220: 1=Yes->1, 2=No->0, else NaN
+    tmp = pd.to_numeric(myDataFrame[outcome_col], errors="coerce")
+    tmp = tmp.map({1:1, 2:0})
+    myDataFrame[outcome_col] = tmp.astype("Int64")
+else:
+    raise ValueError("Missing cancer outcome column (need 'ever_cancer' or 'mcq220').")
+
+print(f"Using outcome: {outcome_col} (1=cancer, 0=non-cancer)")
+
+if myDataFrame[outcome_col].dropna().nunique() < 2:
+    raise ValueError(f"Outcome '{outcome_col}' has no variation (need both 0 and 1).")
+
+# Counts (cancer vs non-cancer)
 counts = (
-    myDataFrame["early_onset_cancer"]
+    myDataFrame[outcome_col]
     .value_counts(dropna=False)
-    .rename_axis("early_onset_cancer")
+    .rename_axis(outcome_col)
     .reset_index(name="n")
 )
-counts.to_csv(outputDirectory / "counts_early_onset.csv", index=False)
-print("\n Counts of early onset cancer (0 = No, 1 = Yes):")
+counts.to_csv(outputDirectory / f"counts_{outcome_col}.csv", index=False)
+print("\nCounts of cancer vs non-cancer:")
 print(counts)
 
-# Finding out Average age, CRP and depression score by group (0 vs 1)
+# categories are: smoke_status, dpq_cat, race_eth, educ_level
 group_cols = [c for c in ["age_years", "hscrp_mg_l_raw", "dpq_total"] if c in myDataFrame.columns]
 if group_cols:
-    dataGroups = myDataFrame.groupby("early_onset_cancer")[group_cols].mean().round(2)
-    dataGroups.to_csv(outputDirectory / "dataGroups.csv")
-print("\n Data Groups are: ")
-print(dataGroups)
+    dataGroups = myDataFrame.groupby(outcome_col)[group_cols].mean().round(2)
+    dataGroups.to_csv(outputDirectory / f"dataGroups_{outcome_col}.csv")
+    print("\n Group means (by outcome):")
+    print(dataGroups)
 
-rows = []
-# continuous variables age_years, hscrp_mg_l_raw, dpq_total
-for col in [c for c in ["age_years", "hscrp_mg_l_raw", "dpq_total"] if c in myDataFrame.columns]:
-    for g in [0, 1]:
-        vals = myDataFrame.loc[myDataFrame["early_onset_cancer"] == g, col].dropna()
-        rows.append({
-            "Variable": col, "Group": g, "N": int(vals.shape[0]),
-            "Mean": float(np.nanmean(vals)) if vals.size else np.nan,
-            "SD": float(np.nanstd(vals, ddof=1)) if vals.size > 1 else np.nan
-        })
-
-# categories are: smoke_status, dpq_cat, race_eth, educ_level
-for col in [c for c in ["smoke_status", "dpq_cat", "race_eth", "educ_level"] if c in myDataFrame.columns]:
-    tab_counts = pd.crosstab(myDataFrame[col], myDataFrame["early_onset_cancer"], dropna=False)
-    tab_pct    = pd.crosstab(myDataFrame[col], myDataFrame["early_onset_cancer"], normalize="columns", dropna=False) * 100
-    for level in tab_counts.index:
-        rows.append({
-            "Variable": col, "Level": str(level),
-            "N_early0": int(tab_counts[0][level]) if 0 in tab_counts.columns else 0,
-            "N_early1": int(tab_counts[1][level]) if 1 in tab_counts.columns else 0,
-            "%_early0": round(float(tab_pct[0][level]), 1) if 0 in tab_pct.columns else np.nan,
-            "%_early1": round(float(tab_pct[1][level]), 1) if 1 in tab_pct.columns else np.nan,
-        })
-
-table1 = pd.DataFrame(rows)
-for c in ["Mean", "SD"]:
-    if c in table1.columns:
-        table1[c] = table1[c].round(2)
-table1.to_csv(outputDirectory / "demographicsTable.csv", index=False)
-
-# Bar Charts
-def save_barplot_simple(df, x, hue, title, fname):
-    if x not in df.columns or hue not in df.columns:
-        return
-    counts_xtab = pd.crosstab(df[x], df[hue])
-    counts_xtab.plot(kind="bar", figsize=(7,4))
-    plt.title(title)
-    plt.xlabel(x)
-    plt.ylabel("Count")
-    plt.tight_layout()
-    plt.savefig(outputDirectory / fname, dpi=300)
-    plt.close()
-
-if "smoke_status" in myDataFrame.columns:
-    save_barplot_simple(myDataFrame, "smoke_status", "early_onset_cancer",
-                        "Smoking Status vs Early-Onset Cancer", "bar_smoking.png")
-if "dpq_cat" in myDataFrame.columns:
-    save_barplot_simple(myDataFrame, "dpq_cat", "early_onset_cancer",
-                        "Depression Category vs Early-Onset Cancer", "bar_depression.png")
-if "race_eth" in myDataFrame.columns:
-    save_barplot_simple(myDataFrame, "race_eth", "early_onset_cancer",
-                        "Race/Ethnicity vs Early-Onset Cancer", "bar_race.png")
-if "educ_level" in myDataFrame.columns:
-    save_barplot_simple(myDataFrame, "educ_level", "early_onset_cancer",
-                        "Education vs Early-Onset Cancer", "bar_education.png")
-
-
-
+# data fixing   (took chat gpt help for this)
 if "hscrp_mg_l_raw" in myDataFrame.columns:
     crp = pd.to_numeric(myDataFrame["hscrp_mg_l_raw"], errors="coerce")
     med = np.nanmedian(crp)
     if np.isfinite(med) and med > 100:
         crp = crp / 1000.0
-        print("[Info] hsCRP looked very large; divided by 1000 for scale.")
-    crp = crp.clip(lower=0, upper=20)  # clip big spikes
-    myDataFrame["log_hscrp"] = np.log1p(crp)  # safe log
+        print("hsCRP looked very large; divided by 1000 for scale.")
+    crp = crp.clip(lower=0, upper=20)  # tame outliers
+    myDataFrame["log_hscrp"] = np.log1p(crp)    # safe log
 
+# z-score helper  (took chat gpt help)
 def zscore(series):
-    s  = pd.to_numeric(series, errors="coerce")
+    s = pd.to_numeric(series, errors="coerce")
     m  = np.nanmean(s)
     sd = np.nanstd(s, ddof=1)
-    if not np.isfinite(sd) or sd == 0:
-        return s
-    return (s - m) / sd
+    return (s - m) / sd if np.isfinite(sd) and sd != 0 else s
 
-if "age_years" in myDataFrame.columns:
-    myDataFrame["age_years_std"] = zscore(myDataFrame["age_years"])
+# standardized versions
 if "dpq_total" in myDataFrame.columns:
     myDataFrame["dpq_total_std"] = zscore(myDataFrame["dpq_total"])
 if "log_hscrp" in myDataFrame.columns:
     myDataFrame["log_hscrp_std"] = zscore(myDataFrame["log_hscrp"])
 
-#  Make some columns categorical
+# categorical types
 for col in ["smoke_status", "dpq_cat", "hscrp_cat", "sex", "educ_level"]:
     if col in myDataFrame.columns:
         myDataFrame[col] = myDataFrame[col].astype("category")
 
-# LOGISTIC Regression Model 
-# Two adjusted models (both include age, sex, education, smoke_status):
-# Model A continuous depression & continuous CRP
-# Model B categorical depression & categorical CRP
+# creating subgroups
+if "age_years" not in myDataFrame.columns:
+    raise ValueError("Missing 'age_years' to create subgroups.")
 
-def fit_simple_logit(formula, used_vars, tag):
-    """Regularized (ridge) logistic by default to avoid Hessian warnings."""
-    need = [v for v in used_vars if v not in myDataFrame.columns]
-    if need:
-        raise ValueError(f"Missing columns for {tag}: {need}")
-    df = myDataFrame.dropna(subset=used_vars).copy()
+df_under50 = myDataFrame[pd.to_numeric(myDataFrame["age_years"], errors="coerce") < 50].copy()
+df_over50  = myDataFrame[pd.to_numeric(myDataFrame["age_years"], errors="coerce") >= 50].copy()
 
-    # Always use a small ridge penalty (alpha).
-    alpha = 1.0
-    model = smf.logit(formula, data=df).fit_regularized(
-        maxiter=500, alpha=alpha, L1_wt=0.0  # L1_wt=0 => pure ridge (L2)
-    )
+print(f"Under-50 rows: {len(df_under50)}")
+print(f"Over 50+ rows:      {len(df_over50)}")
 
-    # summary text
-    txt = [
-        f"Model: {tag}",
-        f"Formula: {formula}",
-        f"Rows used: {int(getattr(model, 'nobs', len(df)))}",
-        f"Regularized (ridge) alpha={alpha}",
-    ]
-    (outputDirectory / f"logit_summary_{tag}.txt").write_text("\n".join(txt), encoding="utf-8")
+# Plots and models
+def save_barplot(myDataFrame_sub, x, hue, title, fname):
+    if x not in myDataFrame_sub.columns or hue not in myDataFrame_sub.columns:
+        return
+    ctab = pd.crosstab(myDataFrame_sub[x], myDataFrame_sub[hue])
+    ax = ctab.plot(kind="bar", figsize=(7,4))
+    ax.set_title(title)
+    ax.set_xlabel(x)
+    ax.set_ylabel("Count")
+    plt.tight_layout()
+    plt.savefig(outputDirectory / fname, dpi=300)
+    plt.close()
 
-    # Odds ratios (no guaranteed CI with regularized fit)
-    params = model.params
-    or_df = pd.DataFrame({
-        "term": params.index,
-        "OR": np.exp(params)
-    }).round({"OR": 3})
-
-    # Try to add CI if the model exposes a covariance (often not for regularized)
-    try:
-        ci = model.conf_int()
-        or_df["CI_lower"] = np.exp(ci[0])
-        or_df["CI_upper"] = np.exp(ci[1])
-        or_df = or_df.round({"CI_lower": 3, "CI_upper": 3})
-    except Exception:
-        pass  # OK to report ORs without CI
-
-    or_df.to_csv(outputDirectory / f"odds_ratios_{tag}.csv", index=False)
-
-    # Simple forest-like plot (points)
-    plot_df = or_df[or_df["term"] != "Intercept"].copy()
-    x = plot_df["OR"].values
-    y = np.arange(len(plot_df))
-    labels = plot_df["term"].values
-
-    plt.figure(figsize=(7, 4))
+def forest_from_or(or_myDataFrame, tag):
+    plot_myDataFrame = or_myDataFrame[or_myDataFrame["term"] != "Intercept"].copy()
+    x = plot_myDataFrame["OR"].values
+    y = np.arange(len(plot_myDataFrame))
+    labels = plot_myDataFrame["term"].values
+    plt.figure(figsize=(7,4))
     plt.scatter(x, y)
     plt.axvline(1.0, color="red", linestyle="--", linewidth=1)
     plt.yticks(y, labels)
@@ -201,10 +136,44 @@ def fit_simple_logit(formula, used_vars, tag):
     plt.savefig(outputDirectory / f"forest_{tag}.png", dpi=300)
     plt.close()
 
-    # Predicted vs actual
-    y_true = df["early_onset_cancer"].astype(int).values
-    y_hat  = model.predict(df).values
-    yj     = y_true + (np.random.rand(len(y_true)) - 0.5) * 0.05
+def fit_logit_ridge(myDataFrame_sub, formula, used_cols, tag):
+    need = [c for c in used_cols if c not in myDataFrame_sub.columns]
+    if need:
+        print(f"[Skip] {tag}: missing columns {need}")
+        return None, None, None
+
+    d = myDataFrame_sub.dropna(subset=used_cols).copy()
+    y = pd.to_numeric(d[outcome_col], errors="coerce")
+    d = d[y.isin([0,1])].copy()
+    if d[outcome_col].nunique() < 2 or len(d) < 30:
+        print(f"[Skip] {tag}: not enough variation or rows (n={len(d)}).")
+        return None, None, None
+
+    # Ridge-regularized logistic (L2)
+    alpha = 1.0
+    model = smf.logit(formula, data=d).fit_regularized(maxiter=500, alpha=alpha, L1_wt=0.0)
+
+    # OR table 
+    params = model.params
+    or_myDataFrame = pd.DataFrame({"term": params.index, "OR": np.exp(params)})
+    try:
+        ci = model.conf_int()
+        or_myDataFrame["CI_lower"] = np.exp(ci[0])
+        or_myDataFrame["CI_upper"] = np.exp(ci[1])
+    except Exception:
+        pass
+    or_myDataFrame = or_myDataFrame.round(3)
+    or_myDataFrame.to_csv(outputDirectory / f"odds_ratios_{tag}.csv", index=False)
+
+    # Forest
+    forest_from_or(or_myDataFrame, tag)
+
+    # Predictions & plots
+    y_true = d[outcome_col].astype(int).values
+    y_hat  = model.predict(d).values
+
+    # Pred vs actual (jittered)
+    yj = y_true + (np.random.rand(len(y_true)) - 0.5) * 0.05
     plt.figure(figsize=(6,4))
     plt.scatter(y_hat, yj, alpha=0.5)
     plt.yticks([0,1], ["Actual: 0", "Actual: 1"])
@@ -220,7 +189,7 @@ def fit_simple_logit(formula, used_vars, tag):
     auc = roc_auc_score(y_true, y_hat)
     plt.figure(figsize=(5,5))
     plt.plot(fpr, tpr, lw=2, label=f"AUC = {auc:.3f}")
-    plt.plot([0,1],[0,1],'k--', lw=1)
+    plt.plot([0,1],[0,1], 'k--', lw=1)
     plt.xlabel("False Positive Rate")
     plt.ylabel("True Positive Rate")
     plt.title(f"ROC Curve ({tag})")
@@ -228,20 +197,57 @@ def fit_simple_logit(formula, used_vars, tag):
     plt.tight_layout()
     plt.savefig(outputDirectory / f"roc_{tag}.png", dpi=300)
     plt.close()
+ 
 
-    print(f"[Done] {tag}: rows used = {int(getattr(model, 'nobs', len(df)))} (ridge alpha={alpha})")
-    return model, or_df
+    # Save short summary
+    nobs = int(getattr(model, "nobs", len(d)))
+    summary = [
+        f"Tag: {tag}",
+        f"Formula: {formula}",
+        f"Rows used: {nobs}",
+        f"Ridge alpha: {alpha}",
+        f"AUC: {auc if np.isfinite(auc) else 'NA'}"
+    ]
+    (outputDirectory / f"logit_summary_{tag}.txt").write_text("\n".join(summary), encoding="utf-8")
 
-# Model A (continuous dpq + continuous CRP) — adjusts for age, sex, education, smoke_status
-if all(c in myDataFrame.columns for c in ["dpq_total_std", "log_hscrp_std", "age_years_std", "sex", "educ_level"]):
-    formula_A = "early_onset_cancer ~ dpq_total_std + log_hscrp_std + age_years_std + C(sex) + C(educ_level) + C(smoke_status)"
-    used_A    = ["early_onset_cancer", "dpq_total_std", "log_hscrp_std", "age_years_std", "sex", "educ_level", "smoke_status"]
-    fit_simple_logit(formula_A, used_A, "A_continuous")
+    print(f"[Done] {tag}: n={nobs}, AUC={auc if np.isfinite(auc) else 'NA'}")
+    return model, or_myDataFrame, auc
 
-# Model B (categorical dpq + categorical CRP) — adjusts for age, sex, education, smoke_status
-if all(c in myDataFrame.columns for c in ["dpq_cat", "hscrp_cat", "age_years_std", "sex", "educ_level"]):
-    formula_B = "early_onset_cancer ~ C(dpq_cat) + C(hscrp_cat) + age_years_std + C(sex) + C(educ_level) + C(smoke_status)"
-    used_B    = ["early_onset_cancer", "dpq_cat", "hscrp_cat", "age_years_std", "sex", "educ_level", "smoke_status"]
-    fit_simple_logit(formula_B, used_B, "B_categorical")
+# Under 50
+u = df_under50
+tag_uA = "u50_A_continuous"
+form_uA= f"{outcome_col} ~ dpq_total_std + log_hscrp_std + C(sex) + C(educ_level) + C(smoke_status)"
+cols_uA= [outcome_col, "dpq_total_std", "log_hscrp_std", "sex", "educ_level", "smoke_status"]
+fit_logit_ridge(u, form_uA, cols_uA, tag_uA)
 
-print("\nAll done!")
+tag_uB = "u50_B_categorical"
+form_uB= f"{outcome_col} ~ C(dpq_cat) + C(hscrp_cat) + C(sex) + C(educ_level) + C(smoke_status)"
+cols_uB= [outcome_col, "dpq_cat", "hscrp_cat", "sex", "educ_level", "smoke_status"]
+fit_logit_ridge(u, form_uB, cols_uB, tag_uB)
+
+# 50 and older
+o = df_over50
+tag_oA = "o50_A_continuous"
+form_oA= f"{outcome_col} ~ dpq_total_std + log_hscrp_std + C(sex) + C(educ_level) + C(smoke_status)"
+cols_oA= [outcome_col, "dpq_total_std", "log_hscrp_std", "sex", "educ_level", "smoke_status"]
+fit_logit_ridge(o, form_oA, cols_oA, tag_oA)
+
+tag_oB = "o50_B_categorical"
+form_oB= f"{outcome_col} ~ C(dpq_cat) + C(hscrp_cat) + C(sex) + C(educ_level) + C(smoke_status)"
+cols_oB= [outcome_col, "dpq_cat", "hscrp_cat", "sex", "educ_level", "smoke_status"]
+fit_logit_ridge(o, form_oB, cols_oB, tag_oB)
+
+# Bar plots
+for (sub, prefix, label) in [(u, "u50", "<50"), (o, "o50", "≥50")]:
+    if "smoke_status" in sub.columns:
+        save_barplot(sub, "smoke_status", outcome_col,
+                     f"Smoking vs {outcome_col} (Age {label})", f"{prefix}_bar_smoking.png")
+    if "dpq_cat" in sub.columns:
+        save_barplot(sub, "dpq_cat", outcome_col,
+                     f"Depression vs {outcome_col} (Age {label})", f"{prefix}_bar_depression.png")
+    if "hscrp_cat" in sub.columns:
+        save_barplot(sub, "hscrp_cat", outcome_col,
+                     f"hsCRP vs {outcome_col} (Age {label})", f"{prefix}_bar_hscrp.png")
+
+print("\nSubgroup analyses (cancer vs non-cancer) completed.")
+print("\n See files with prefixes 'u50_' and 'o50_' in the output folder.")
