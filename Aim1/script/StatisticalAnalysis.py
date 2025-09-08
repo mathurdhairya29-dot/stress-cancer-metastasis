@@ -5,21 +5,21 @@ import matplotlib.pyplot as plt
 import statsmodels.formula.api as smf
 from sqlalchemy import create_engine
 from sklearn.metrics import roc_curve, roc_auc_score
-
-script_dir = Path(__file__).resolve().parent  
-
+import pandas as pd
+import numpy as np
+import re
+import pandas as pd
+import numpy as np
 
 # I was having some difficulty in laptop so worked directly on csv file without installing postgres
 myDataSource   = "csv"   # "csv" or "sql"
-
-baseTablePath = script_dir.parent/"data"/"analysis_base.csv"
-# baseTablePath   = Path("C:/STS/My Project/StressMetastasis/Aim1/data/analysis_base.csv")
-
+# baseTablePath = script_dir.parent/"data"/"analysis_base.csv"
+baseTablePath   = Path("C:/STS/My Project/StressMetastasis/Aim1/data/analysis_base.csv")
 myConnectionSQL= "postgresql+psycopg2://postgres:admin@localhost:5432/postgres"
 baseTable      = "analysis_base"
 
-outputDirectory = script_dir.parent/"output"
-# outputDirectory= Path("C:/STS/My Project/StressMetastasis/Aim1/output")
+# outputDirectory = script_dir.parent/"output"
+outputDirectory= Path("C:/STS/My Project/StressMetastasis/Aim1/output")
 outputDirectory.mkdir(parents=True, exist_ok=True)
 
 print(f"saving outputs to: {outputDirectory}")
@@ -36,7 +36,7 @@ else:
 
 print(f"Number of records in dataset: {len(myDataFrame)}")
 
-print(myDataFrame.head())
+print(myDataFrame);
 
 if "ever_cancer" in myDataFrame.columns:
     outcome_col = "ever_cancer"
@@ -257,3 +257,247 @@ for (sub, prefix, label) in [(u, "u50", "<50"), (o, "o50", "≥50")]:
 
 print("\nSubgroup analyses (cancer vs non-cancer) completed.")
 print("\n See files with prefixes 'u50_' and 'o50_' in the output folder.")
+
+# **************************Next Set of analysis ****************
+
+# discover optional covariate columns if present
+race_col = next((c for c in ["race_eth","race_ethnicity","race","RIDRETH1","RIDRETH3"] if c in myDataFrame.columns), None)
+pir_col  = next((c for c in ["pir","PIR","income_pir"] if c in myDataFrame.columns), None)
+
+# ensure standardized predictors exist (if earlier steps didn't produce them already)
+if "dpq_total_std" not in myDataFrame.columns and "dpq_total" in myDataFrame.columns:
+    myDataFrame["dpq_total_std"] = zscore(myDataFrame["dpq_total"])
+if "log_hscrp_std" not in myDataFrame.columns and "hscrp_mg_l_raw" in myDataFrame.columns:
+    crpTmp = pd.to_numeric(myDataFrame["hscrp_mg_l_raw"], errors="coerce").clip(lower=0)
+    myDataFrame["log_hscrp"] = np.log1p(crpTmp)
+    myDataFrame["log_hscrp_std"] = zscore(myDataFrame["log_hscrp"])
+
+# Collector for consolidated summary
+summaryRows = []
+
+def ExtractRow(or_df, var_name):
+    if or_df is None or var_name not in or_df['term'].values:
+        return (np.nan, np.nan, np.nan)
+    r = or_df.loc[or_df['term'] == var_name].iloc[0]
+    return (
+        float(r.get("OR", np.nan)),
+        float(r.get("CI_lower", np.nan)),
+        float(r.get("CI_upper", np.nan)),
+    )
+
+def addSummary(tag, auc, nobs, or_df):
+    or_phq, phq_lo, phq_hi = ExtractRow(or_df, "dpq_total_std")
+    or_crp, crp_lo, crp_hi = ExtractRow(or_df, "log_hscrp_std")
+    summaryRows.append({
+        "tag": tag,
+        "n": nobs,
+        "AUC": auc if (isinstance(auc, (int,float)) and np.isfinite(auc)) else np.nan,
+        "OR_PHQ9": or_phq,
+        "PHQ9_CI_lower": phq_lo,
+        "PHQ9_CI_upper": phq_hi,
+        "OR_CRP": or_crp,
+        "CRP_CI_lower": crp_lo,
+        "CRP_CI_upper": crp_hi,
+    })
+
+# Case-only analysis (early-onset vs late-onset among cases)
+
+if "early_onset_proxy" not in myDataFrame.columns:
+    if "age_years" not in myDataFrame.columns:
+        raise ValueError("Missing 'early_onset_proxy' or 'age_years' to derive it.")
+    myDataFrame["early_onset_proxy"] = (pd.to_numeric(myDataFrame["age_years"], errors="coerce") < 50).astype("Int64")
+
+cases_only = myDataFrame[pd.to_numeric(myDataFrame[outcome_col], errors="coerce") == 1].copy()
+
+predictorsCase = [c for c in ["dpq_total_std","log_hscrp_std"] if c in cases_only.columns]
+catTermsCase  = []
+if "smoke_status" in cases_only.columns: catTermsCase.append("C(smoke_status)")
+if "sex" in cases_only.columns:          catTermsCase.append("C(sex)")
+if "educ_level" in cases_only.columns:   catTermsCase.append("C(educ_level)")
+if race_col:                              catTermsCase.append(f"C({race_col})")
+if pir_col and pir_col in cases_only.columns: predictorsCase.append(pir_col)
+
+rhsCase = predictorsCase + catTermsCase
+if len(rhsCase) >= 2:
+    _form_case = "early_onset_proxy ~ " + " + ".join(rhsCase)
+    _cols_case = list({_c for _c in (["sex","educ_level","smoke_status", race_col, pir_col] + predictorsCase) if _c and _c in cases_only.columns})
+    _saved_outcome = outcome_col
+    outcome_col = "early_onset_proxy"
+    _model, _or, _auc = fit_logit_ridge(cases_only, _form_case, _cols_case, tag="case_only_early_vs_late")
+    outcome_col = _saved_outcome
+    try:
+        _nobs = int(getattr(_model, "nobs", len(cases_only)))
+    except Exception:
+        _nobs = len(cases_only)
+    addSummary("case_only_early_vs_late", _auc, _nobs, _or)
+else:
+    print("additional case-only: insufficient predictors.")
+
+# Sensitivity in <50: exclude acute CRP (hscrp_mg_l_raw > 10) and re-fit
+
+u50Cases = myDataFrame[pd.to_numeric(myDataFrame["age_years"], errors="coerce") < 50].copy()
+
+basePred = [c for c in ["dpq_total_std","log_hscrp_std"] if c in u50Cases.columns]
+baseCat  = []
+if "sex" in u50Cases.columns:          baseCat.append("C(sex)")
+if "educ_level" in u50Cases.columns:   baseCat.append("C(educ_level)")
+if "smoke_status" in u50Cases.columns: baseCat.append("C(smoke_status)")
+if race_col:                              baseCat.append(f"C({race_col})")
+if pir_col and pir_col in u50Cases.columns: basePred.append(pir_col)
+
+rhs = basePred + baseCat
+if len(rhs) >= 2:
+    formu50Cases = f"{outcome_col} ~ " + " + ".join(rhs)
+    colsU50 = list({_c for _c in (["sex","educ_level","smoke_status", race_col, pir_col, outcome_col] + basePred) if _c and _c in u50Cases.columns})
+    _model, _or, _auc = fit_logit_ridge(u50Cases, formu50Cases, colsU50, tag="u50_base_all")
+    _nobs = int(getattr(_model, "nobs", len(u50Cases))) if _model is not None else len(u50Cases)
+    addSummary("u50_base_all", _auc, _nobs, _or)
+
+    if "hscrp_mg_l_raw" in u50Cases.columns:
+        _u50_sens = u50Cases[pd.to_numeric(u50Cases["hscrp_mg_l_raw"], errors="coerce") <= 10].copy()
+        _model, _or, _auc = fit_logit_ridge(_u50_sens, formu50Cases, colsU50, tag="u50_sensitivity_exclude_crp_gt10")
+        _nobs = int(getattr(_model, "nobs", len(_u50_sens))) if _model is not None else len(_u50_sens)
+        addSummary("u50_sensitivity_exclude_crp_gt10", _auc, _nobs, _or)
+    else:
+        print("additional sensitivity: 'hscrp_mg_l_raw' not found for filter.")
+else:
+    print("additional u50 models: insufficient predictors.")
+
+# Younger cutoffs: <45 and <40 with same model spec *********************************
+
+for _cut in [45, 40]:
+    _sub = myDataFrame[pd.to_numeric(myDataFrame["age_years"], errors="coerce") < _cut].copy()
+    if len(rhs) >= 2:
+        _cols_y = list({_c for _c in (["sex","educ_level","smoke_status", race_col, pir_col, outcome_col] + basePred) if _c and _c in _sub.columns})
+        _tag = f"prof_u{_cut}_base_all"
+        _model, _or, _auc = fit_logit_ridge(_sub, formu50Cases, _cols_y, tag=_tag)
+        _nobs = int(getattr(_model, "nobs", len(_sub))) if _model is not None else len(_sub)
+        addSummary(_tag, _auc, _nobs, _or)
+
+# Stratified (<50) by sex and race/ethnicity
+
+if "sex" in u50Cases.columns and len(rhs) >= 2:
+    for _lvl in u50Cases["sex"].dropna().astype(str).unique():
+        _sub = u50Cases[u50Cases["sex"].astype(str) == _lvl].copy()
+        _cols_s = list({_c for _c in (["sex","educ_level","smoke_status", race_col, pir_col, outcome_col] + basePred) if _c and _c in _sub.columns})
+        _tag = f"u50_sex_{str(_lvl).replace(' ','_')}"
+        _model, _or, _auc = fit_logit_ridge(_sub, formu50Cases, _cols_s, tag=_tag)
+        _nobs = int(getattr(_model, "nobs", len(_sub))) if _model is not None else len(_sub)
+        addSummary(_tag, _auc, _nobs, _or)
+
+if race_col and race_col in u50Cases.columns and len(rhs) >= 2:
+    for _lvl in u50Cases[race_col].dropna().astype(str).unique():
+        _sub = u50Cases[u50Cases[race_col].astype(str) == _lvl].copy()
+        _cols_r = list({_c for _c in (["sex","educ_level","smoke_status", race_col, pir_col, outcome_col] + basePred) if _c and _c in _sub.columns})
+        _tag = f"u50_race_{str(_lvl).replace(' ','_').replace('/','-')}"
+        _model, _or, _auc = fit_logit_ridge(_sub, formu50Cases, _cols_r, tag=_tag)
+        _nobs = int(getattr(_model, "nobs", len(_sub))) if _model is not None else len(_sub)
+        addSummary(_tag, _auc, _nobs, _or)
+
+# --- Write consolidated outputs so that we can understand all the values in one go
+if summaryRows:
+    mySummaryDF = pd.DataFrame(summaryRows)
+    desc_map = {
+        "case_only_early_vs_late": "Case-only: early (<50) vs late (≥50) among cancer cases",
+        "u50_base_all": "Continuous model in <50 (all covariates)",
+        "u50_sensitivity_exclude_crp_gt10": "Sensitivity in <50 excluding hsCRP>10",
+        "u45_base_all": "Continuous model in <45 (all covariates)",
+        "u40_base_all": "Continuous model in <40 (all covariates)",
+    }
+    mySummaryDF["description"] = mySummaryDF["tag"].apply(lambda t: next((v for k,v in desc_map.items() if t.startswith(k.rstrip("*"))), "Other analysis"))
+    sumCSV = outputDirectory / "consolidated_AdditinalAnalysis_summary.csv"
+    mySummaryDF.to_csv(sumCSV, index=False)
+
+    print(f"\nWrote consolidated summary CSV: {sumCSV}")
+
+    print("\nAdditional analyses completed. See files in:", outputDirectory)
+
+
+#  I thought to write all the results in single csv file for better analysis comparison.... Took help to read all the files from output directory
+# and generate summary most importantly logit_summary and OR summary
+
+allRows = []
+ORFiles = sorted([p for p in outputDirectory.glob("odds_ratios_*.csv")])
+sumFiles = {p.stem.replace("logit_summary_",""): p for p in outputDirectory.glob("logit_summary_*.txt")}
+
+def readSummaryText(fp):
+    d = {"AUC": np.nan, "Rows used": np.nan, "Formula": ""}
+    try:
+        txt = Path(fp).read_text(encoding="utf-8")
+        m_auc = re.search(r"AUC:\s*([0-9.NA]+)", txt)
+        if m_auc:
+            try:
+                d["AUC"] = float(m_auc.group(1))
+            except:
+                d["AUC"] = np.nan
+        m_rows = re.search(r"Rows used:\s*([0-9]+)", txt)
+        if m_rows:
+            d["Rows used"] = int(m_rows.group(1))
+        m_form = re.search(r"Formula:\s*(.+)", txt)
+        if m_form:
+            d["Formula"] = m_form.group(1).strip()
+    except Exception as e:
+        pass
+    return d
+
+for or_fp in ORFiles:
+    tag = or_fp.stem.replace("odds_ratios_","")
+    or_df = pd.read_csv(or_fp)
+    # Pull PHQ-9 and CRP rows if present
+    def grab(or_df, term):
+        if term in or_df.get("term", pd.Series([])).values:
+            r = or_df.loc[or_df["term"]==term].iloc[0]
+            return (
+                float(r.get("OR", np.nan)),
+                float(r.get("CI_lower", np.nan)) if "CI_lower" in r else np.nan,
+                float(r.get("CI_upper", np.nan)) if "CI_upper" in r else np.nan,
+            )
+        return (np.nan, np.nan, np.nan)
+
+    or_phq, phq_lo, phq_hi = grab(or_df, "dpq_total_std")
+    or_crp, crp_lo, crp_hi = grab(or_df, "log_hscrp_std")
+
+    s_info = readSummaryText(sumFiles.get(tag, None)) if tag in sumFiles else {"AUC": np.nan, "Rows used": np.nan, "Formula": ""}
+
+    allRows.append({
+        "tag": tag,
+        "Records": s_info.get("Rows used", np.nan),
+        "AUC": s_info.get("AUC", np.nan),
+        "OR_PHQ9": or_phq,
+        "PHQ9_CI_lower": phq_lo,
+        "PHQ9_CI_upper": phq_hi,
+        "OR_CRP": or_crp,
+        "CRP_CI_lower": crp_lo,
+        "CRP_CI_upper": crp_hi,
+        "Formula": s_info.get("Formula","")
+    })
+
+if allRows:
+    # Tag details
+    desc_map_all = {
+        "case_only_early_vs_late": "Case-only: early (<50) vs late (≥50) among cancer cases",
+        "u50_base_all": "Continuous model in <50 (all covariates)",
+        "u50_sensitivity_exclude_crp_gt10": "Sensitivity in <50 excluding hsCRP>10",
+        "u45_base_all": "Continuous model in <45 (all covariates)",
+        "u40_base_all": "Continuous model in <40 (all covariates)",
+        "u50_A_continuous": "Original: continuous model in <50",
+        "u50_B_categorical": "Original: categorical model in <50",
+        "o50_A_continuous": "Original: continuous model in ≥50",
+        "o50_B_categorical": "Original: categorical model in ≥50",
+        "u50_sex_": "Stratified: <50 by sex",
+        "u50_race_": "Stratified: <50 by race/ethnicity",
+    }
+    def _desc_from_tag(t):
+        for k, v in desc_map_all.items():
+            if t.startswith(k):
+                return v
+        return "Other analysis"
+
+    _all_df = pd.DataFrame(allRows).sort_values(by=["tag"]).reset_index(drop=True)
+    _all_df["description"] = _all_df["tag"].apply(_desc_from_tag)
+    _all_csv = outputDirectory / "ALL_consolidated_summary.csv"
+    _all_df.to_csv(_all_csv, index=False)
+
+    print(f"\nWrote ALL consolidated summary CSV: {_all_csv}")
+else:
+    print("\nNo OR/AUC outputs found to build ALL_consolidated_summary.")
