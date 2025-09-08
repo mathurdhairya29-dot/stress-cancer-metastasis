@@ -1,0 +1,5 @@
+Tag: prof_u45_base_all
+Formula: ever_cancer ~ dpq_total_std + log_hscrp_std + pir + C(sex) + C(educ_level) + C(smoke_status) + C(race_eth)
+Rows used: 1498
+Ridge alpha: 1.0
+AUC: 0.6493274805755733
