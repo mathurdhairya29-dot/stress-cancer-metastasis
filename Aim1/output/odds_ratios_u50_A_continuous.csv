@@ -1,0 +1,12 @@
+term,OR,CI_lower,CI_upper
+Intercept,0.038,0.018,0.08
+C(sex)[T.2],1.504,0.802,2.823
+C(educ_level)[T.2.0],1.0,,
+C(educ_level)[T.3.0],0.396,0.139,1.128
+C(educ_level)[T.4.0],1.0,,
+C(educ_level)[T.5.0],1.0,,
+C(educ_level)[T.9.0],1.0,,
+C(smoke_status)[T.former],0.49,0.182,1.318
+C(smoke_status)[T.never],0.518,0.242,1.107
+dpq_total_std,1.091,0.827,1.44
+log_hscrp_std,1.0,,

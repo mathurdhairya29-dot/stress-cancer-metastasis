@@ -1,0 +1,8 @@
+Tag: ipw_u50_high_stress
+Exposure: high_stress
+Propensity formula: high_stress ~ C(sex) + C(race_eth) + C(educ_level) + C(smoke_status) + pir
+Outcome formula (GLM Binomial w/ freq_weights): ever_cancer ~ high_stress
+Rows used: 2584
+Weight stats (min/mean/p95/max): 0.459 / 0.996 / 1.166 / 1.779
+Weighted OR (95% CI) for high_stress: 0.678 (0.282, 1.631)
+Unweighted OR (95% CI) for high_stress: 1.085 (0.535, 2.203)

@@ -1,0 +1,5 @@
+Tag: o50_B_categorical
+Formula: ever_cancer ~ C(dpq_cat) + C(hscrp_cat) + C(sex) + C(educ_level) + C(smoke_status)
+Rows used: 2972
+Ridge alpha: 1.0
+AUC: 0.587296254461082
