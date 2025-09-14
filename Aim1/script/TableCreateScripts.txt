@@ -1,0 +1,150 @@
+1) Recreate helper tables (dpq, smoking, hsCRP)
+
+-- 1A) Depression: PHQ-9 total and categories
+DROP TABLE IF EXISTS dpq_stress;
+CREATE TABLE dpq_stress AS
+SELECT
+  d.seqn,
+  /* Treat 7=Refused, 9=Don't know as NULL */
+  (CASE WHEN d.dpq010 IN (7,9) THEN NULL ELSE d.dpq010 END) +
+  (CASE WHEN d.dpq020 IN (7,9) THEN NULL ELSE d.dpq020 END) +
+  (CASE WHEN d.dpq030 IN (7,9) THEN NULL ELSE d.dpq030 END) +
+  (CASE WHEN d.dpq040 IN (7,9) THEN NULL ELSE d.dpq040 END) +
+  (CASE WHEN d.dpq050 IN (7,9) THEN NULL ELSE d.dpq050 END) +
+  (CASE WHEN d.dpq060 IN (7,9) THEN NULL ELSE d.dpq060 END) +
+  (CASE WHEN d.dpq070 IN (7,9) THEN NULL ELSE d.dpq070 END) +
+  (CASE WHEN d.dpq080 IN (7,9) THEN NULL ELSE d.dpq080 END) +
+  (CASE WHEN d.dpq090 IN (7,9) THEN NULL ELSE d.dpq090 END)
+  AS dpq_total,
+  CASE
+    WHEN (
+      (CASE WHEN d.dpq010 IN (7,9) THEN NULL ELSE d.dpq010 END) +
+      (CASE WHEN d.dpq020 IN (7,9) THEN NULL ELSE d.dpq020 END) +
+      (CASE WHEN d.dpq030 IN (7,9) THEN NULL ELSE d.dpq030 END) +
+      (CASE WHEN d.dpq040 IN (7,9) THEN NULL ELSE d.dpq040 END) +
+      (CASE WHEN d.dpq050 IN (7,9) THEN NULL ELSE d.dpq050 END) +
+      (CASE WHEN d.dpq060 IN (7,9) THEN NULL ELSE d.dpq060 END) +
+      (CASE WHEN d.dpq070 IN (7,9) THEN NULL ELSE d.dpq070 END) +
+      (CASE WHEN d.dpq080 IN (7,9) THEN NULL ELSE d.dpq080 END) +
+      (CASE WHEN d.dpq090 IN (7,9) THEN NULL ELSE d.dpq090 END)
+    ) IS NULL THEN NULL
+    WHEN (
+      (CASE WHEN d.dpq010 IN (7,9) THEN NULL ELSE d.dpq010 END) +
+      (CASE WHEN d.dpq020 IN (7,9) THEN NULL ELSE d.dpq020 END) +
+      (CASE WHEN d.dpq030 IN (7,9) THEN NULL ELSE d.dpq030 END) +
+      (CASE WHEN d.dpq040 IN (7,9) THEN NULL ELSE d.dpq040 END) +
+      (CASE WHEN d.dpq050 IN (7,9) THEN NULL ELSE d.dpq050 END) +
+      (CASE WHEN d.dpq060 IN (7,9) THEN NULL ELSE d.dpq060 END) +
+      (CASE WHEN d.dpq070 IN (7,9) THEN NULL ELSE d.dpq070 END) +
+      (CASE WHEN d.dpq080 IN (7,9) THEN NULL ELSE d.dpq080 END) +
+      (CASE WHEN d.dpq090 IN (7,9) THEN NULL ELSE d.dpq090 END)
+    ) BETWEEN 0 AND 4  THEN 'none-minimal'
+    WHEN (
+      (CASE WHEN d.dpq010 IN (7,9) THEN NULL ELSE d.dpq010 END) +
+      (CASE WHEN d.dpq020 IN (7,9) THEN NULL ELSE d.dpq020 END) +
+      (CASE WHEN d.dpq030 IN (7,9) THEN NULL ELSE d.dpq030 END) +
+      (CASE WHEN d.dpq040 IN (7,9) THEN NULL ELSE d.dpq040 END) +
+      (CASE WHEN d.dpq050 IN (7,9) THEN NULL ELSE d.dpq050 END) +
+      (CASE WHEN d.dpq060 IN (7,9) THEN NULL ELSE d.dpq060 END) +
+      (CASE WHEN d.dpq070 IN (7,9) THEN NULL ELSE d.dpq070 END) +
+      (CASE WHEN d.dpq080 IN (7,9) THEN NULL ELSE d.dpq080 END) +
+      (CASE WHEN d.dpq090 IN (7,9) THEN NULL ELSE d.dpq090 END)
+    ) BETWEEN 5 AND 9  THEN 'mild'
+    WHEN (
+      (CASE WHEN d.dpq010 IN (7,9) THEN NULL ELSE d.dpq010 END) +
+      (CASE WHEN d.dpq020 IN (7,9) THEN NULL ELSE d.dpq020 END) +
+      (CASE WHEN d.dpq030 IN (7,9) THEN NULL ELSE d.dpq030 END) +
+      (CASE WHEN d.dpq040 IN (7,9) THEN NULL ELSE d.dpq040 END) +
+      (CASE WHEN d.dpq050 IN (7,9) THEN NULL ELSE d.dpq050 END) +
+      (CASE WHEN d.dpq060 IN (7,9) THEN NULL ELSE d.dpq060 END) +
+      (CASE WHEN d.dpq070 IN (7,9) THEN NULL ELSE d.dpq070 END) +
+      (CASE WHEN d.dpq080 IN (7,9) THEN NULL ELSE d.dpq080 END) +
+      (CASE WHEN d.dpq090 IN (7,9) THEN NULL ELSE d.dpq090 END)
+    ) BETWEEN 10 AND 14 THEN 'moderate'
+    WHEN (
+      (CASE WHEN d.dpq010 IN (7,9) THEN NULL ELSE d.dpq010 END) +
+      (CASE WHEN d.dpq020 IN (7,9) THEN NULL ELSE d.dpq020 END) +
+      (CASE WHEN d.dpq030 IN (7,9) THEN NULL ELSE d.dpq030 END) +
+      (CASE WHEN d.dpq040 IN (7,9) THEN NULL ELSE d.dpq040 END) +
+      (CASE WHEN d.dpq050 IN (7,9) THEN NULL ELSE d.dpq050 END) +
+      (CASE WHEN d.dpq060 IN (7,9) THEN NULL ELSE d.dpq060 END) +
+      (CASE WHEN d.dpq070 IN (7,9) THEN NULL ELSE d.dpq070 END) +
+      (CASE WHEN d.dpq080 IN (7,9) THEN NULL ELSE d.dpq080 END) +
+      (CASE WHEN d.dpq090 IN (7,9) THEN NULL ELSE d.dpq090 END)
+    ) BETWEEN 15 AND 19 THEN 'mod-severe'
+    ELSE 'severe'
+  END AS dpq_cat
+FROM dpq_data d;
+
+-- 1B) Smoking status (example mapping; adjust to your SMQ variables)
+DROP TABLE IF EXISTS smoking_status;
+CREATE TABLE smoking_status AS
+SELECT
+  s.seqn,
+  CASE
+    WHEN s.smq020 = 1 AND s.smq040 IN (1,2) THEN 'current'  -- ever smoked & now smoke
+    WHEN s.smq020 = 1 AND s.smq040 = 3     THEN 'former'    -- ever smoked & now no
+    WHEN s.smq020 = 2                      THEN 'never'     -- never smoked
+    ELSE NULL
+  END AS smoke_status
+FROM smq_data s;
+
+-- 1C) hsCRP clean (from your hsCRP table dictionary)
+DROP TABLE IF EXISTS hscrp_clean;
+CREATE TABLE hscrp_clean AS
+SELECT
+  h.seqn,
+  h.lbxhscrp AS hscrp_mg_l_raw,
+  CASE
+    WHEN h.lbxhscrp IS NULL THEN NULL
+    WHEN h.lbxhscrp < 1     THEN 'low'
+    WHEN h.lbxhscrp < 3     THEN 'average'
+    ELSE 'high'
+  END AS hscrp_cat
+FROM hscrp_data h;
+
+
+2) Cancer flags (cancer vs non-cancer + optional early-onset)
+
+DROP TABLE IF EXISTS cancer_flags;
+CREATE TABLE cancer_flags AS
+SELECT
+  m.seqn,
+  m.mcq220,  -- 1=Yes, 2=No, 7/9 missing
+  CASE
+    WHEN m.mcq220 = 1 THEN 1
+    WHEN m.mcq220 = 2 THEN 0
+    ELSE NULL
+  END AS ever_cancer
+FROM mcq_data_filtered m;
+
+
+DROP TABLE IF EXISTS analysis_base;
+CREATE TABLE analysis_base AS
+SELECT
+    de.seqn,
+    de.age_years, de.age_group, de.sex, de.race_eth, de.educ_level, de.pir,
+    cf.mcq220, cf.ever_cancer,
+    dp.dpq_total, dp.dpq_cat,
+    ss.smoke_status,
+    hc.hscrp_mg_l_raw, hc.hscrp_cat
+FROM demo_clean de
+LEFT JOIN cancer_flags   cf USING (seqn)
+LEFT JOIN dpq_stress     dp USING (seqn)
+LEFT JOIN smoking_status ss USING (seqn)
+LEFT JOIN hscrp_clean    hc USING (seqn);
+
+
+Optional “early-onset” proxy (document this clearly):
+
+ALTER TABLE analysis_base ADD COLUMN early_onset_proxy INT;
+
+UPDATE analysis_base
+SET early_onset_proxy =
+  CASE
+    WHEN ever_cancer = 1 AND age_years < 50 THEN 1
+    WHEN ever_cancer = 1 AND age_years >= 50 THEN 0
+    ELSE NULL
+  END;
+
+
