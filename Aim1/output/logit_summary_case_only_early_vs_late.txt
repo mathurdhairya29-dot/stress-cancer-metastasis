@@ -1,5 +1,0 @@
-Tag: case_only_early_vs_late
-Formula: early_onset_proxy ~ dpq_total_std + log_hscrp_std + pir + C(smoke_status) + C(sex) + C(educ_level) + C(race_eth)
-Rows used: 707
-Ridge alpha: 1.0
-AUC: 0.733031218529708

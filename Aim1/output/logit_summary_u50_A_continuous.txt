@@ -1,5 +1,0 @@
-Tag: u50_A_continuous
-Formula: ever_cancer ~ dpq_total_std + log_hscrp_std + C(sex) + C(educ_level) + C(smoke_status)
-Rows used: 2009
-Ridge alpha: 1.0
-AUC: 0.6302399183256764

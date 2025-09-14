@@ -1,8 +1,0 @@
-Tag: ipw_u50_high_crp
-Exposure: high_crp
-Propensity formula: high_crp ~ C(sex) + C(race_eth) + C(educ_level) + C(smoke_status) + pir
-Outcome formula (weighted): ever_cancer ~ high_crp
-Rows used: 2584
-Weight stats (min/mean/p95/max): 1.000 / 2.000 / 4.807 / 8.167
-Weighted OR (95% CI) for high_crp: 0.811 (0.589, 1.115)
-Unweighted OR (95% CI) for high_crp: 0.826 (0.494, 1.381)
