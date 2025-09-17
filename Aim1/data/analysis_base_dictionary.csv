@@ -1,14 +1,23 @@
-"column_name","description","source_table","source_variable","data_type"
-"age_group","Age group derived from RIDAGEYR (18–29, 30–39, 40–49, 50–59, 60+).","demo_clean","Derived from RIDAGEYR",NULL
-"age_years","Age in years at screening (continuous).","demo_clean","RIDAGEYR",NULL
-"dpq_cat","Categorical PHQ-9 severity: none-minimal, mild, moderate, moderately-severe, severe.","dpq_stress","Derived from dpq_total",NULL
-"dpq_total","PHQ-9 depression total score (sum of DPQ010–DPQ090; range 0–27; missing codes set NULL).","dpq_stress","Derived from DPQ items",NULL
-"early_onset_cancer","Outcome: 1=early-onset (<50 proxy), 0=not early-onset; defined only for ever-cancer cases.","cancer_flags","Derived from MCQ220 + RIDAGEYR",NULL
-"educ_level","Education level for adults (DMDEDUC2 coding).","demo_clean","DMDEDUC2",NULL
-"hscrp_cat","hsCRP category: low (<1), average (1–3), high (>3 mg/L).","hscrp_clean","Derived from LBXHSCRP",NULL
-"hscrp_mg_l_raw","High-sensitivity CRP concentration in mg/L (LBXHSCRP, raw values).","hscrp_clean","LBXHSCRP",NULL
-"pir","Income-to-poverty ratio (INDFMPIR).","demo_clean","INDFMPIR",NULL
-"race_eth","Race/Hispanic origin (RIDRETH3 coding).","demo_clean","RIDRETH3",NULL
-"seqn","Respondent sequence number (unique participant ID).","demo_clean","SEQN",NULL
-"sex","Sex at interview (1=Male, 2=Female).","demo_clean","RIAGENDR",NULL
-"smoke_status","Smoking status: never / former / current (derived from SMQ020, SMQ040).","smoking_status","Derived",NULL
+"column","pandas_dtype","suggested_sql_type","non_null_count","missing_count","source"
+"age_group","object","TEXT","8153","3780","BASE"
+"age_years","float64","DOUBLE PRECISION","11933","0","BASE"
+"BMXARMC","float64","DOUBLE PRECISION","8562","3371","BMX"
+"BMXARML","float64","DOUBLE PRECISION","8568","3365","BMX"
+"BMXBMI","float64","DOUBLE PRECISION","8471","3462","BMX"
+"BMXHIP","float64","DOUBLE PRECISION","6776","5157","BMX"
+"BMXHT","float64","DOUBLE PRECISION","8499","3434","BMX"
+"BMXLEG","float64","DOUBLE PRECISION","7335","4598","BMX"
+"BMXWAIST","float64","DOUBLE PRECISION","8190","3743","BMX"
+"BMXWT","float64","DOUBLE PRECISION","8754","3179","BMX"
+"dpq_cat","object","TEXT","5455","6478","BASE"
+"dpq_total","float64","DOUBLE PRECISION","5455","6478","BASE"
+"educ_level","float64","DOUBLE PRECISION","7794","4139","BASE"
+"ever_cancer","float64","DOUBLE PRECISION","7800","4133","BASE"
+"hscrp_cat","object","TEXT","7282","4651","BASE"
+"hscrp_mg_l_raw","float64","DOUBLE PRECISION","7282","4651","BASE"
+"mcq220","float64","DOUBLE PRECISION","7807","4126","BASE"
+"pir","float64","DOUBLE PRECISION","9892","2041","BASE"
+"race_eth","int64","SMALLINT","11933","0","BASE"
+"seqn","int64","BIGINT","11933","0","BASE"
+"sex","int64","SMALLINT","11933","0","BASE"
+"smoke_status","object","TEXT","8121","3812","BASE"
