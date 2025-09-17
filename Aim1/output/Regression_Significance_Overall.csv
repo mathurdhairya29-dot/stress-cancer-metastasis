@@ -1,0 +1,19 @@
+analysis,predictor,spec,detail,OR,CI_lower,CI_upper,p,significant_95,any_level_significant
+Case-only (continuous),PHQ-9,continuous,dpq_total,1.0809124708068292,1.0212354775524493,1.1440767533320626,0.0072497476619181,True,True
+Case-only (continuous),CRP,continuous,not found,,,,,,
+Case-only (continuous),BMI,continuous,bmx_bmi,0.9756490467218448,0.9061035014405094,1.050532373902035,0.5135057402555532,False,False
+Case-only (categorical),PHQ-9,categorical,C(dpq_cat)[T.severe],4.569010337197518,0.8699130367085189,23.997634913491517,0.072608144008982,False,False
+Case-only (categorical),CRP,categorical,C(hscrp_cat)[T.low],2.080714819312416,0.9491053365119828,4.561531784466623,0.0673194703625056,False,False
+Case-only (categorical),BMI,continuous,bmx_bmi,0.994537484295133,0.9228042520495612,1.0718468250132966,0.8859672699732586,False,False
+Case-only sensitivity (CRP<=10),PHQ-9,continuous,dpq_total,1.0845481739546656,1.0227646383932296,1.1500639516402211,0.0066852406913786,True,True
+Case-only sensitivity (CRP<=10),CRP,continuous,not found,,,,,,
+Case-only sensitivity (CRP<=10),BMI,continuous,bmx_bmi,0.9804975394752958,0.8968620377603597,1.071932342367676,0.6650447753375079,False,False
+Case-only (IPTW),PHQ-9,continuous,dpq_total,1.0809124708068292,1.02165131911605,1.1436110810845128,0.0068399806056396,True,True
+Case-only (IPTW),CRP,continuous,not found,,,,,,
+Case-only (IPTW),BMI,continuous,bmx_bmi,0.9756490467218448,0.92646776483255,1.0274411031896933,0.3502263389289575,False,False
+Population (continuous),PHQ-9,continuous,dpq_total,1.0137592835100673,0.9938885866315158,1.0340272528794696,0.1760500778641923,False,False
+Population (continuous),CRP,continuous,not found,,,,,,
+Population (continuous),BMI,continuous,bmx_bmi,0.9955308274345834,0.9818780074829212,1.009373487153724,0.5249409681631358,False,False
+Population (categorical),PHQ-9,categorical,C(dpq_cat)[T.severe],1.446420301867254,0.6363618023658207,3.2876449872946174,0.3782945715587994,False,False
+Population (categorical),CRP,categorical,C(hscrp_cat)[T.low],0.8239765424648875,0.6611901137565577,1.02684134019337,0.0846902790847402,False,False
+Population (categorical),BMI,continuous,bmx_bmi,0.9957663853003508,0.9813374823712198,1.0104074407697428,0.568887763105612,False,False
