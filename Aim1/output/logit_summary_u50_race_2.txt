@@ -1,5 +1,0 @@
-Tag: u50_race_2
-Formula: ever_cancer ~ dpq_total_std + log_hscrp_std + pir + C(sex) + C(educ_level) + C(smoke_status)
-Rows used: 181
-Ridge alpha: 5.0
-AUC: 0.5642458100558659
