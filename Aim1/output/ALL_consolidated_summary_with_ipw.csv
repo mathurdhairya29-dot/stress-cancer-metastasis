@@ -1,0 +1,31 @@
+tag,analysis,model,exposure,predictor,weight_type,OR,CI_lower,CI_upper,AUC,Records,Formula
+u50_high_crp,ipw,logit_unweighted,high_crp,high_crp,Unweighted,0.947,0.542,1.656,,2206,Outcome: ever_cancer ~ high_crp | PS: high_crp ~ C(sex) + C(race_eth) + C(educ_level) + C(smoke_status) + pir
+u50_high_crp,ipw,glm_binomial_weighted,high_crp,high_crp,Weighted,0.884,0.499,1.569,,2206,Outcome: ever_cancer ~ high_crp | PS: high_crp ~ C(sex) + C(race_eth) + C(educ_level) + C(smoke_status) + pir
+u50_high_stress,ipw,logit_unweighted,high_stress,high_stress,Unweighted,1.034,0.488,2.189,,2206,Outcome: ever_cancer ~ high_stress | PS: high_stress ~ C(sex) + C(race_eth) + C(educ_level) + C(smoke_status) + pir
+u50_high_stress,ipw,glm_binomial_weighted,high_stress,high_stress,Weighted,0.67,0.269,1.67,,2206,Outcome: ever_cancer ~ high_stress | PS: high_stress ~ C(sex) + C(race_eth) + C(educ_level) + C(smoke_status) + pir
+case_only_early_vs_late,logit,standard_logit,,dpq_total_std,NA,1.454,1.011,2.092,0.7566896551724138,404,early_onset_proxy ~ dpq_total_std + log_hscrp_std + pir + C(smoke_status) + C(sex) + C(educ_level) + C(race_eth)
+case_only_early_vs_late,logit,standard_logit,,log_hscrp_std,NA,0.869,0.568,1.33,0.7566896551724138,404,early_onset_proxy ~ dpq_total_std + log_hscrp_std + pir + C(smoke_status) + C(sex) + C(educ_level) + C(race_eth)
+o50_A_continuous,logit,standard_logit,,dpq_total_std,NA,0.996,0.888,1.118,0.578092416717493,1957,ever_cancer ~ dpq_total_std + log_hscrp_std + C(sex) + C(educ_level) + C(smoke_status)
+o50_A_continuous,logit,standard_logit,,log_hscrp_std,NA,1.0,0.895,1.118,0.578092416717493,1957,ever_cancer ~ dpq_total_std + log_hscrp_std + C(sex) + C(educ_level) + C(smoke_status)
+prof_u40_base_all,logit,standard_logit,,dpq_total_std,NA,0.899,0.504,1.604,0.7066299085529855,687,ever_cancer ~ dpq_total_std + log_hscrp_std + pir + C(sex) + C(educ_level) + C(smoke_status) + C(race_eth)
+prof_u40_base_all,logit,standard_logit,,log_hscrp_std,NA,0.983,0.558,1.732,0.7066299085529855,687,ever_cancer ~ dpq_total_std + log_hscrp_std + pir + C(sex) + C(educ_level) + C(smoke_status) + C(race_eth)
+prof_u45_base_all,logit,standard_logit,,dpq_total_std,NA,0.967,0.605,1.544,0.6048770547479961,883,ever_cancer ~ dpq_total_std + log_hscrp_std + pir + C(sex) + C(educ_level) + C(smoke_status) + C(race_eth)
+prof_u45_base_all,logit,standard_logit,,log_hscrp_std,NA,0.967,0.615,1.52,0.6048770547479961,883,ever_cancer ~ dpq_total_std + log_hscrp_std + pir + C(sex) + C(educ_level) + C(smoke_status) + C(race_eth)
+u50_A_continuous,logit,standard_logit,,dpq_total_std,NA,1.116,0.812,1.535,0.6437707853671015,1336,ever_cancer ~ dpq_total_std + log_hscrp_std + C(sex) + C(educ_level) + C(smoke_status)
+u50_A_continuous,logit,standard_logit,,log_hscrp_std,NA,0.955,0.686,1.331,0.6437707853671015,1336,ever_cancer ~ dpq_total_std + log_hscrp_std + C(sex) + C(educ_level) + C(smoke_status)
+u50_base_all,logit,standard_logit,,dpq_total_std,NA,1.112,0.797,1.551,0.6378965861724484,1030,ever_cancer ~ dpq_total_std + log_hscrp_std + pir + C(sex) + C(educ_level) + C(smoke_status) + C(race_eth)
+u50_base_all,logit,standard_logit,,log_hscrp_std,NA,0.934,0.656,1.328,0.6378965861724484,1030,ever_cancer ~ dpq_total_std + log_hscrp_std + pir + C(sex) + C(educ_level) + C(smoke_status) + C(race_eth)
+u50_race_1.0,logit,standard_logit,,dpq_total_std,NA,1.0,,,0.48484848484848486,100,ever_cancer ~ dpq_total_std + log_hscrp_std + pir + C(sex) + C(educ_level) + C(smoke_status)
+u50_race_1.0,logit,standard_logit,,log_hscrp_std,NA,1.0,,,0.48484848484848486,100,ever_cancer ~ dpq_total_std + log_hscrp_std + pir + C(sex) + C(educ_level) + C(smoke_status)
+u50_race_2.0,logit,standard_logit,,dpq_total_std,NA,1.0,,,0.5555555555555556,128,ever_cancer ~ dpq_total_std + log_hscrp_std + pir + C(sex) + C(educ_level) + C(smoke_status)
+u50_race_2.0,logit,standard_logit,,log_hscrp_std,NA,1.0,,,0.5555555555555556,128,ever_cancer ~ dpq_total_std + log_hscrp_std + pir + C(sex) + C(educ_level) + C(smoke_status)
+u50_race_3.0,logit,standard_logit,,dpq_total_std,NA,1.398,0.98,1.993,0.6813671061762664,677,ever_cancer ~ dpq_total_std + log_hscrp_std + pir + C(sex) + C(educ_level) + C(smoke_status)
+u50_race_3.0,logit,standard_logit,,log_hscrp_std,NA,0.822,0.535,1.264,0.6813671061762664,677,ever_cancer ~ dpq_total_std + log_hscrp_std + pir + C(sex) + C(educ_level) + C(smoke_status)
+u50_race_4.0,logit,standard_logit,,dpq_total_std,NA,1.0,,,0.5557851239669421,125,ever_cancer ~ dpq_total_std + log_hscrp_std + pir + C(sex) + C(educ_level) + C(smoke_status)
+u50_race_4.0,logit,standard_logit,,log_hscrp_std,NA,1.0,,,0.5557851239669421,125,ever_cancer ~ dpq_total_std + log_hscrp_std + pir + C(sex) + C(educ_level) + C(smoke_status)
+u50_sensitivity_exclude_crp_gt10,logit,standard_logit,,dpq_total_std,NA,1.184,0.844,1.661,0.6553218071172369,946,ever_cancer ~ dpq_total_std + log_hscrp_std + pir + C(sex) + C(educ_level) + C(smoke_status) + C(race_eth)
+u50_sensitivity_exclude_crp_gt10,logit,standard_logit,,log_hscrp_std,NA,1.0,,,0.6553218071172369,946,ever_cancer ~ dpq_total_std + log_hscrp_std + pir + C(sex) + C(educ_level) + C(smoke_status) + C(race_eth)
+u50_sex_1,logit,standard_logit,,dpq_total_std,NA,0.918,0.456,1.848,0.5705882352941176,432,ever_cancer ~ dpq_total_std + log_hscrp_std + pir + C(educ_level) + C(smoke_status) + C(race_eth)
+u50_sex_1,logit,standard_logit,,log_hscrp_std,NA,1.0,,,0.5705882352941176,432,ever_cancer ~ dpq_total_std + log_hscrp_std + pir + C(educ_level) + C(smoke_status) + C(race_eth)
+u50_sex_2,logit,standard_logit,,dpq_total_std,NA,1.2,0.816,1.764,0.6800031565656567,598,ever_cancer ~ dpq_total_std + log_hscrp_std + pir + C(educ_level) + C(smoke_status) + C(race_eth)
+u50_sex_2,logit,standard_logit,,log_hscrp_std,NA,0.86,0.579,1.277,0.6800031565656567,598,ever_cancer ~ dpq_total_std + log_hscrp_std + pir + C(educ_level) + C(smoke_status) + C(race_eth)

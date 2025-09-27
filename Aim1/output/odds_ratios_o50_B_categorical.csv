@@ -1,0 +1,15 @@
+term,OR,CI_lower,CI_upper
+Intercept,0.211,0.147,0.303
+C(dpq_cat)[T.mod-severe],1.0,,
+C(dpq_cat)[T.moderate],1.049,0.701,1.568
+C(dpq_cat)[T.none-minimal],0.984,0.784,1.235
+C(dpq_cat)[T.severe],1.015,0.407,2.531
+C(hscrp_cat)[T.high],0.809,0.658,0.996
+C(hscrp_cat)[T.low],0.779,0.626,0.97
+C(sex)[T.2],1.033,0.864,1.234
+C(educ_level)[T.2.0],1.0,,
+C(educ_level)[T.3.0],1.0,,
+C(educ_level)[T.4.0],1.09,0.867,1.37
+C(educ_level)[T.5.0],1.547,1.241,1.928
+C(smoke_status)[T.former],1.712,1.264,2.321
+C(smoke_status)[T.never],1.183,0.877,1.597
